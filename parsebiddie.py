@@ -214,6 +214,30 @@ def parseProgram(tokens, top=True):
     #End of if loop
     if tokens[0] == "right?":
         return parseProgram(tokens[1:])
+    #Declaring a function
+    if tokens[0] == "do" and tokens[1] == "you" and tokens[2] == "know":
+        fname = tokens[3]
+        args = []
+        i = 5
+        if tokens[4] == "listen":
+            while tokens[i] != "...":
+                args += tokens[i]
+                i += 1
+            i+=1
+        (ftoks,rest) = getBody(tokens[i:])
+        fbody = parseProgram(ftoks)
+        return ({"Function":[fname,args,fbody]}, parseProgram(rest))
+    #Returning from a function
+    if tokens[0] == "can" and tokens[1] == "you" and tokens[2] == "just":
+        (toreturn,rest) = parseFormula(tokens[3:])
+        return ({"Return":[toreturn]}, parseProgram(rest))
+    #Breaking in a function
+    if tokens[0] == "get" and tokens[1] == "out":
+        return ("Break", parseProgram(tokens[2:]))
+    #Calling a function
+    if tokens[0] == "is" and tokens[1] == "that":
+        fname = tokens[2]
+        return ({"Call":[fname]}, parseProgram(tokens[3:]))
     #Assignment
     v = parseVariable(tokens)
     if not v is None:
@@ -228,14 +252,20 @@ def parseProgram(tokens, top=True):
                     (formula, rest) = r
             return ({"Assign":[varname,formula]}, parseProgram(rest))
         
+def getBody(tokens):
+    i=0
+    while tokens[i] != "so" and tokens[i+1] != "yeah":
+        i+=1
+    return (tokens[0:i],tokens[i+2:])
+
 def tokenizeAndParse(s):
     tokens = re.split(r"(\s|;|{|})",s)
     tokens = [t for t in tokens if not t.isspace() and not t=="" and not t==";"]
-    (programbody, endtok) = parseProgram(tokens)
-    return programbody
+    #(programbody, endtok) = parseProgram(tokens)
+    return parseProgram(tokens)
 
-print(tokenizeAndParse("x is so 5.5; was like x;"))
+#print(tokenizeAndParse("x is so 5.5; was like x;"))
 #print(tokenizeAndParse("literally x so was like 5 or like z so was like 6 so like was like 7 right? was like 10"))
-
+print(tokenizeAndParse("do you know f1 listen a b c ... was like a was like b was like c can you just 0 so yeah was like 0 was like 1 is that f1"))
 
 #eof
