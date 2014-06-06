@@ -27,17 +27,20 @@ arithmetic keywords:
 % - like leftover
 
 method keywords:
-declare method - do you know (name)?
+declare method - do you know (name)
 arguments - listen
 return - can you just
-end method - so, yeah
-call method - is that (name)?
+end method - so yeah
+call method - is that (name)
 print - was like
 assignment - is so
 '''
 import re
+import sys
 
-def parseNumber(tokens, top=True):
+reservedKeywords = ["lol","no","the","best","needs","like","whatever","is","literally","just","can't","crazy","basic","kind","of","or","so","right?","basically","you","know?","and","then","but","not","totally","wants","has","leftover","do","know","listen","can","just","yeah","that","was"]
+
+def parseNumber(tokens):
     if "." in tokens[0]:
         splittok = re.split(r"(.)",tokens[0])
         splittok = [t for t in splittok if not t.isspace() and not t=="" and not t=="."]
@@ -45,16 +48,45 @@ def parseNumber(tokens, top=True):
             return ({"Decimal": [float(tokens[0])]}, tokens[1:])
     elif re.compile(r"(0|[1-9][0-9]*)").match(tokens[0]):
         return ({"Integer": [int(tokens[0])]}, tokens[1:])
+    else:
+        sys.exit("ewww: invalid number format")
 
-def parseVariable(tokens, top=True):
+def parseVariable(tokens):
     if re.compile(r"[a-z][A-Za-z]*").match(tokens[0]):
-        return ({"Variable": [tokens[0]]}, tokens[1:])
+        if tokens[0] in reservedKeywords:
+            sys.exit("ewww: invalid variable name; reserved keyword")
+        else:
+            return ({"Variable": [tokens[0]]}, tokens[1:])
 
-def parsePrint(tokens, printtok, top=True):
-    while tokens[0][len(tokens)-1] != '"':
-        printtok += tokens[0]
-        parsePrint(tokens[1:],printtok)
-        
+def parsePrint(tokens, printtok):
+    #First piece of string - remove beginning "
+    if tokens[0][0] == '"':
+        tokens[0] = tokens[0][1:]
+        #Check to see if it's a single word string
+        if tokens[0][len(tokens[0])-1] != '"':
+            printtok+=tokens[0]
+            printtok+=" "
+        else:
+            tokens[0] = tokens[0][0:len(tokens[0])-1]
+            printtok+=tokens[0]
+            return ({"String":[printtok]}, tokens[1:])
+    i=1
+    while tokens[i][len(tokens[i])-1] != '"':
+        if tokens[i][0] == '"':
+            sys.exit("ewww: malformed print string; escape quotation marks")
+        printtok+=tokens[i]
+        printtok+=" "
+        i+=1
+        if len(tokens[i:]) < 1:
+            sys.exit("ewww: malformed print string; forgot closing quotation marks?")
+    #Last piece of string - remove trailing " and return printstring
+    if tokens[i][0] == '"':
+        sys.exit("ewww: malformed print string; escape quotation marks")
+    tokens[i] = tokens[i][0:len(tokens[i])-1]
+    printtok+= tokens[i]
+    return ({"String":[printtok]}, tokens[i+1:])
+
+
 def parseFormula(tmp, top=True):
     tokens = tmp[0:]
     r = leftFormula(tokens, False)
@@ -94,15 +126,17 @@ def parseTerm(tmp, top=True):
                 return (e1, tokens)
         else:
             return (e1, tokens)
+    else:
+        sys.exit("ewww: invalid term/formula")
 
 def leftTerm(tmp, top=True):
     tokens = tmp[0:]
-    r = parseVariable(tokens, False)
+    r = parseVariable(tokens)
     if not r is None:
         return r
     
     tokens = tmp[0:]
-    r = parseNumber(tokens, False)
+    r = parseNumber(tokens)
     if not r is None:
         return r
 
@@ -176,8 +210,12 @@ def parseProgram(tokens, top=True):
     if len(tokens) == 0 or tokens == []:
         return ("End", [])
     #Print statement
+    if (len(tokens) < 2) and tokens[0] != "right?":
+        sys.exit("ewww: invalid input program")
     if tokens[0] == "was" and tokens[1] == "like":
         printtok = tokens[2:]
+        if printtok == []:
+            sys.exit("ewww: invalid print string length")
         if printtok[0][0] == '"':
             (printstr,rest) = parsePrint(printtok,"")
         else:
@@ -188,6 +226,8 @@ def parseProgram(tokens, top=True):
                 r = parseFormula(printtok)
                 if not r is None:
                     (printstr, rest) = r
+                else:
+                    sys.exit("ewww: invalid print string")
         return ({"Print": [printstr]}, parseProgram(rest))
     #While loop
     if tokens[0] == "basically":
@@ -251,7 +291,8 @@ def parseProgram(tokens, top=True):
                 if not r is None:
                     (formula, rest) = r
             return ({"Assign":[varname,formula]}, parseProgram(rest))
-        
+        else:
+            sys.exit("ewww: not a valid program")
 def getBody(tokens):
     i=0
     while tokens[i] != "so" and tokens[i+1] != "yeah":
@@ -264,8 +305,9 @@ def tokenizeAndParse(s):
     #(programbody, endtok) = parseProgram(tokens)
     return parseProgram(tokens)
 
-#print(tokenizeAndParse("x is so 5.5; was like x;"))
+#print(tokenizeAndParse("x is so 5.5 was like x"))
 #print(tokenizeAndParse("literally x so was like 5 or like z so was like 6 so like was like 7 right? was like 10"))
-print(tokenizeAndParse("do you know f1 listen a b c ... was like a was like b was like c can you just 0 so yeah was like 0 was like 1 is that f1"))
+#print(tokenizeAndParse("do you know f1 listen a b c ... was like a was like b was like c can you just 0 so yeah was like 0 was like 1 is that f1"))
+#print(tokenizeAndParse('was like "hi its me was like "5"'))
 
 #eof
