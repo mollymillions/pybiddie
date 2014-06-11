@@ -1,5 +1,5 @@
 '''
-pyBiddie parser
+pybiddie parser
 
 logical keywords:
 false - lol no
@@ -228,17 +228,17 @@ def parseProgram(tokens, top=True):
                     (printstr, rest) = r
                 else:
                     sys.exit("ewww: invalid print string")
-        return ({"Print": [printstr]}, parseProgram(rest))
+        return ({"Print": [printstr,parseProgram(rest)]})
     #While loop
     if tokens[0] == "basically":
         (cond,body) = parseFormula(tokens[1:])
         (action,rest) = parseProgram(body[1:])
-        return ({"While":[cond, action, rest]}, [])
+        return ({"While":[cond, action, rest]})
     #If loop
     if tokens[0] == "literally":
         (cond,body) = parseFormula(tokens[1:])
         (action,rest) = parseProgram(body[1:])
-        return ({"If":[cond,action,rest]}, [])
+        return ({"If":[cond,action,rest]})
     #End of while loop
     if tokens[0] == "you" and tokens[1] == "know?":
         return parseProgram(tokens[2:])
@@ -246,11 +246,11 @@ def parseProgram(tokens, top=True):
     if tokens[0] == "or" and tokens[1] == "like":
         (cond,body) = parseFormula(tokens[2:])
         (action,rest) = parseProgram(body[1:])
-        return ({"Else If":[cond,action,rest]},[])
+        return ({"Else If":[cond,action,rest]})
     #Else loop
     if tokens[0] == "so" and tokens[1] == "like":
         (action,rest) = parseProgram(tokens[2:])
-        return ({"Else":[action,rest]},[])
+        return ({"Else":[action,rest]})
     #End of if loop
     if tokens[0] == "right?":
         return parseProgram(tokens[1:])
@@ -266,18 +266,18 @@ def parseProgram(tokens, top=True):
             i+=1
         (ftoks,rest) = getBody(tokens[i:])
         fbody = parseProgram(ftoks)
-        return ({"Function":[fname,args,fbody]}, parseProgram(rest))
+        return ({"Function":[fname,args,fbody,parseProgram(rest)]})
     #Returning from a function
     if tokens[0] == "can" and tokens[1] == "you" and tokens[2] == "just":
         (toreturn,rest) = parseFormula(tokens[3:])
-        return ({"Return":[toreturn]}, parseProgram(rest))
+        return ({"Return":[toreturn,parseProgram(rest)]})
     #Breaking in a function
     if tokens[0] == "get" and tokens[1] == "out":
         return ("Break", parseProgram(tokens[2:]))
     #Calling a function
     if tokens[0] == "is" and tokens[1] == "that":
         fname = tokens[2]
-        return ({"Call":[fname]}, parseProgram(tokens[3:]))
+        return ({"Call":[fname,parseProgram(tokens[3:])]})
     #Assignment
     v = parseVariable(tokens)
     if not v is None:
@@ -290,7 +290,7 @@ def parseProgram(tokens, top=True):
                 r = parseFormula(seq[2:])
                 if not r is None:
                     (formula, rest) = r
-            return ({"Assign":[varname,formula]}, parseProgram(rest))
+            return ({"Assign":[varname,formula,parseProgram(rest)]})
         else:
             sys.exit("ewww: not a valid program")
 def getBody(tokens):
@@ -305,7 +305,7 @@ def tokenizeAndParse(s):
     #(programbody, endtok) = parseProgram(tokens)
     return parseProgram(tokens)
 
-#print(tokenizeAndParse("x is so 5.5 was like x"))
+print(tokenizeAndParse("x is so 5.5 was like 5"))
 #print(tokenizeAndParse("literally x so was like 5 or like z so was like 6 so like was like 7 right? was like 10"))
 #print(tokenizeAndParse("do you know f1 listen a b c ... was like a was like b was like c can you just 0 so yeah was like 0 was like 1 is that f1"))
 #print(tokenizeAndParse('was like "hi its me was like "5"'))
