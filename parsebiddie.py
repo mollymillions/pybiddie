@@ -134,7 +134,6 @@ def leftTerm(tmp, top=True):
     r = parseVariable(tokens)
     if not r is None:
         return r
-    
     tokens = tmp[0:]
     r = parseNumber(tokens)
     if not r is None:
@@ -219,11 +218,11 @@ def parseProgram(tokens, top=True):
         if printtok[0][0] == '"':
             (printstr,rest) = parsePrint(printtok,"")
         else:
-            r = parseTerm(printtok)
+            r = parseFormula(printtok)
             if not r is None:
                 (printstr, rest) = r
             else:
-                r = parseFormula(printtok)
+                r = parseTerm(printtok)
                 if not r is None:
                     (printstr, rest) = r
                 else:
@@ -305,7 +304,7 @@ def tokenizeAndParse(s):
     #(programbody, endtok) = parseProgram(tokens)
     return parseProgram(tokens)
 
-print(tokenizeAndParse("x is so 5.5 was like 5"))
+#print(tokenizeAndParse("x is so 5.5 was like 5"))
 #print(tokenizeAndParse("literally x so was like 5 or like z so was like 6 so like was like 7 right? was like 10"))
 #print(tokenizeAndParse("do you know f1 listen a b c ... was like a was like b was like c can you just 0 so yeah was like 0 was like 1 is that f1"))
 #print(tokenizeAndParse('was like "hi its me was like "5"'))
